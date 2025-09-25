@@ -21,25 +21,31 @@ st.set_page_config(page_title="Dashboard Produits Capillaires", layout="wide")
 # --------------------------------------------------------------
 # CHARGEMENT DES DONNÉES
 # --------------------------------------------------------------
-
 @st.cache_data
-def load_data(filepath):
-    # base_path = dossier où se trouve dashboard.py
-    base_path = os.path.dirname(__file__)  
-    full_path = os.path.join(base_path, "..", filepath)  # remonte d'un cran
-    
+def load_data(relative_path):
+    """Charge le CSV depuis n'importe quel dossier où se trouve le script."""
+    base_path = os.path.dirname(__file__)
+    full_path = os.path.join(base_path, "..", relative_path)
+
     if not os.path.exists(full_path):
         raise FileNotFoundError(f"Dataset not found at {full_path}")
-    
+
     df = pd.read_csv(full_path)
+
+    # Normalisation catégories
+    df['category'] = df['category'].str.strip().str.lower()
     hair_categories = [
-        'Hair', 'Conditioner', 'Dry Shampoo', 'Shampoo', 'Shampoo & Conditioner',
-        'Hair Masks', 'Hair Oil', 'Hair Primers', 'Hair products',
-        'Hair Spray', 'Leave-In Conditioner'
+        'hair', 'conditioner', 'dry shampoo', 'shampoo', 'shampoo & conditioner',
+        'hair masks', 'hair oil', 'hair primers', 'hair products',
+        'hair spray', 'leave-in conditioner'
     ]
     df = df[df['category'].isin(hair_categories)].copy()
+
+    # Colonnes texte
     for col in ['name','brand','details','ingredients']:
         df[col] = df[col].fillna('')
+
+    # Création du corpus
     df['corpus'] = (
         "Catégorie: " + df['category'] + ". " +
         "Nom: " + df['name'] + ". " +
@@ -47,6 +53,7 @@ def load_data(filepath):
         "Description: " + df['details'] + ". " +
         "Ingrédients: " + df['ingredients']
     )
+
     return df
 
 df_hair = load_data("data/sephora_website_dataset.csv")
@@ -100,36 +107,25 @@ st.subheader("Distribution des prix")
 fig2 = px.histogram(df_hair, x='price', nbins=50)
 st.plotly_chart(fig2, use_container_width=True)
 
-# Graphique 3 : Distribution du prix par catégorie (boxplot)
-
 st.subheader("Distribution des Prix par Catégorie")
-
-# Create the box plot
-fig = px.box(
+fig3 = px.box(
     df_hair,
     x="category",
     y="price",
     color="category",
     labels={"category": "Catégorie", "price": "Prix ($)"}
 )
-
-# Update layout
-fig.update_layout(
-    xaxis_title="Catégorie",
-    yaxis_title="Prix ($)",
-    showlegend=False,
-    title="Distribution des Prix par Catégorie"
-)
-
-# Display the figure
-st.plotly_chart(fig, use_container_width=True)
+fig3.update_layout(xaxis_title="Catégorie", yaxis_title="Prix ($)", showlegend=False, title="Distribution des Prix par Catégorie")
+st.plotly_chart(fig3, use_container_width=True)
 
 st.subheader("WordCloud des ingrédients")
 text_ing = " ".join(df_hair['ingredients'].dropna())
 stopwords = set(STOPWORDS).union({"water","aqua","eau","citric","acid","fragrance"})
 wc = WordCloud(stopwords=stopwords, background_color="white", width=800, height=400).generate(text_ing)
-plt.figure(figsize=(10,5)); plt.imshow(wc, interpolation="bilinear")
-plt.axis("off"); st.pyplot(plt)
+plt.figure(figsize=(10,5))
+plt.imshow(wc, interpolation="bilinear")
+plt.axis("off")
+st.pyplot(plt)
 
 # --------------------------------------------------------------
 # COMPARAISON DES MODÈLES
@@ -137,11 +133,11 @@ plt.axis("off"); st.pyplot(plt)
 st.header("Comparaison des modèles")
 
 test_suite = [
-    {"query":"shampoo for oily hair","category_keyword":"Shampoo","corpus_keyword":"oily"},
-    {"query":"dry mask for dry hair","category_keyword":"Mask","corpus_keyword":"dry"},
-    {"query":"curly hair conditioner","category_keyword":"Conditioner","corpus_keyword":"curly"},
-    {"query":"light hair oil for shine","category_keyword":"Oil","corpus_keyword":"shine"},
-    {"query":"leave-in conditioner for frizz","category_keyword":"Leave-In","corpus_keyword":"frizz"}
+    {"query":"shampoo for oily hair","category_keyword":"shampoo","corpus_keyword":"oily"},
+    {"query":"dry mask for dry hair","category_keyword":"mask","corpus_keyword":"dry"},
+    {"query":"curly hair conditioner","category_keyword":"conditioner","corpus_keyword":"curly"},
+    {"query":"light hair oil for shine","category_keyword":"oil","corpus_keyword":"shine"},
+    {"query":"leave-in conditioner for frizz","category_keyword":"leave-in","corpus_keyword":"frizz"}
 ]
 
 def calc_metrics(recs, ground_truth_idx, top_n):
@@ -178,14 +174,14 @@ comparison_df = pd.DataFrame({
 st.subheader("Tableau comparatif")
 st.dataframe(comparison_df)
 
-fig3 = px.bar(comparison_df.reset_index(), x="index",
+fig4 = px.bar(comparison_df.reset_index(), x="index",
               y=["precision","recall","f1_score"],
               barmode="group", title="Précision / Rappel / F1")
-st.plotly_chart(fig3, use_container_width=True)
-
-fig4 = px.bar(comparison_df.reset_index(), x="index",
-              y=["time_sec"], title="Temps moyen d'inférence (s)")
 st.plotly_chart(fig4, use_container_width=True)
+
+fig5 = px.bar(comparison_df.reset_index(), x="index",
+              y=["time_sec"], title="Temps moyen d'inférence (s)")
+st.plotly_chart(fig5, use_container_width=True)
 
 best = "Avancé (SBERT)" if advanced_avg["f1_score"] > baseline_avg["f1_score"] else "Baseline (TF-IDF)"
 st.success(f"🏆 Modèle le plus performant : **{best}**")
