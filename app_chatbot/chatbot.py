@@ -14,19 +14,37 @@ import torch
 # --------------------------------------------------------------
 st.set_page_config(page_title="Chatbot Produits Capillaires", layout="centered")
 
+
 # --------------------------------------------------------------
 # CHARGEMENT DES DONNÉES
 # --------------------------------------------------------------
+import os
+
 @st.cache_data
 def load_data(filepath):
-    df = pd.read_csv(filepath)
+    # Construire chemin absolu basé sur l'emplacement de ce fichier
+    base_path = os.path.dirname(__file__)
+    full_path = os.path.join(base_path, filepath)
+
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Dataset not found at {full_path}")
+
+    df = pd.read_csv(full_path)
+
+    # Filtrage catégories capillaires
     hair_categories = [
         'Hair', 'Conditioner', 'Dry Shampoo', 'Hair Masks', 'Hair Oil',
         'Hair Primers', 'Hair products', 'Hair Spray', 'Leave-In Conditioner'
     ]
     df = df[df['category'].isin(hair_categories)].copy()
+
+    # Nettoyer colonnes textuelles
     for col in ['name','brand','details','ingredients']:
+        if col not in df.columns:
+            df[col] = ""
         df[col] = df[col].fillna('')
+
+    # Créer le champ "corpus"
     df['corpus'] = (
         "Catégorie: " + df['category'] + ". " +
         "Nom: " + df['name'] + ". " +
@@ -34,20 +52,10 @@ def load_data(filepath):
         "Description: " + df['details'] + ". " +
         "Ingrédients: " + df['ingredients']
     )
+
     return df
 
-import os
-import pandas as pd
-
-def load_data(filepath):
-    base_path = os.path.dirname(__file__)  # folder where chatbot.py lives
-    full_path = os.path.join(base_path, filepath)
-
-    if not os.path.exists(full_path):
-        raise FileNotFoundError(f"Dataset not found at {full_path}")
-    
-    return pd.read_csv(full_path)
-
+# Charger le dataset
 df_hair = load_data("data/sephora_website_dataset.csv")
 
 
