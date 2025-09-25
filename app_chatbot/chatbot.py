@@ -33,7 +33,7 @@ def load_data(filepath):
 
     # Filtrage catégories capillaires
     hair_categories = [
-        'Hair', 'Conditioner', 'Dry Shampoo', 'Hair Masks', 'Hair Oil',
+        'Hair', 'Conditioner', 'Dry Shampoo','Shampoo', 'Shampoo & Conditioner', 'Hair Masks', 'Hair Oil',
         'Hair Primers', 'Hair products', 'Hair Spray', 'Leave-In Conditioner'
     ]
     df = df[df['category'].isin(hair_categories)].copy()
