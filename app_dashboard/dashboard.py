@@ -25,7 +25,7 @@ st.set_page_config(page_title="Dashboard Produits Capillaires", layout="wide")
 def load_data(relative_path):
     """Charge le CSV depuis n'importe quel dossier où se trouve le script."""
     base_path = os.path.dirname(__file__)
-    full_path = os.path.join(base_path, "..", relative_path)
+    full_path = os.path.join(base_path, relative_path)
 
     if not os.path.exists(full_path):
         raise FileNotFoundError(f"Dataset not found at {full_path}")
