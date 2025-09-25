@@ -36,7 +36,7 @@ def load_data(filepath):
     )
     return df
 
-df_hair = load_data("../data/sephora_website_dataset.csv")
+df_hair = load_data("data/sephora_website_dataset.csv")
 
 # --------------------------------------------------------------
 # BASELINE & AVANCÉ
