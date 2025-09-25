@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer, util
 import torch, time
+import os
 
 # --------------------------------------------------------------
 # CONFIG
@@ -20,12 +21,21 @@ st.set_page_config(page_title="Dashboard Produits Capillaires", layout="wide")
 # --------------------------------------------------------------
 # CHARGEMENT DES DONNÉES
 # --------------------------------------------------------------
+
 @st.cache_data
 def load_data(filepath):
-    df = pd.read_csv(filepath)
+    # base_path = dossier où se trouve dashboard.py
+    base_path = os.path.dirname(__file__)  
+    full_path = os.path.join(base_path, "..", filepath)  # remonte d'un cran
+    
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Dataset not found at {full_path}")
+    
+    df = pd.read_csv(full_path)
     hair_categories = [
-        'Hair', 'Conditioner', 'Dry Shampoo', 'Shampoo', 'Shampoo & Conditioner', 'Hair Masks', 'Hair Oil',
-        'Hair Primers', 'Hair products', 'Hair Spray', 'Leave-In Conditioner'
+        'Hair', 'Conditioner', 'Dry Shampoo', 'Shampoo', 'Shampoo & Conditioner',
+        'Hair Masks', 'Hair Oil', 'Hair Primers', 'Hair products',
+        'Hair Spray', 'Leave-In Conditioner'
     ]
     df = df[df['category'].isin(hair_categories)].copy()
     for col in ['name','brand','details','ingredients']:

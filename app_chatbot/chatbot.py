@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer, util
 import torch
-
+import os
 # --------------------------------------------------------------
 # CONFIG
 # --------------------------------------------------------------
@@ -18,7 +18,6 @@ st.set_page_config(page_title="Chatbot Produits Capillaires", layout="centered")
 # --------------------------------------------------------------
 # CHARGEMENT DES DONNÉES
 # --------------------------------------------------------------
-import os
 
 @st.cache_data
 def load_data(filepath):
