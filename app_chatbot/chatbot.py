@@ -36,7 +36,20 @@ def load_data(filepath):
     )
     return df
 
+import os
+import pandas as pd
+
+def load_data(filepath):
+    base_path = os.path.dirname(__file__)  # folder where chatbot.py lives
+    full_path = os.path.join(base_path, filepath)
+
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Dataset not found at {full_path}")
+    
+    return pd.read_csv(full_path)
+
 df_hair = load_data("data/sephora_website_dataset.csv")
+
 
 # --------------------------------------------------------------
 # BASELINE & AVANCÉ
